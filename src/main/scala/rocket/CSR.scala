@@ -219,14 +219,6 @@ class CSRFileIO(implicit p: Parameters) extends CoreBundle
   val trace = Vec(retireWidth, new TracedInstruction).asOutput
 }
 
-case class CustomCSR(id: Int, mask: BigInt, init: Option[BigInt])
-
-class CustomCSRIO(implicit p: Parameters) extends CoreBundle {
-  val wen = Bool()
-  val wdata = UInt(xLen.W)
-  val value = UInt(xLen.W)
-}
-
 class CSRFile(
   perfEventSets: EventSets = new EventSets(Seq()),
   customCSRs: Seq[CustomCSR] = Nil)(implicit p: Parameters)
@@ -327,7 +319,6 @@ class CSRFile(
   val reg_hpmevent = io.counters.map(c => Reg(init = UInt(0, xLen)))
   (io.counters zip reg_hpmevent) foreach { case (c, e) => c.eventSel := e }
   val reg_hpmcounter = io.counters.map(c => WideCounter(CSR.hpmWidth, c.inc, reset = false))
-  val hpm_mask = reg_mcounteren & Mux((!usingVM).B || reg_mstatus.prv === PRV.S, delegable_counters.U, reg_scounteren)
 
   val mip = Wire(init=reg_mip)
   mip.lip := (io.interrupts.lip: Seq[Bool])
@@ -502,7 +493,7 @@ class CSRFile(
     val allow_sret = Bool(!usingVM) || reg_mstatus.prv > PRV.S || !reg_mstatus.tsr
     val counter_addr = io_dec.csr(log2Ceil(reg_mcounteren.getWidth)-1, 0)
     val allow_counter = (reg_mstatus.prv > PRV.S || reg_mcounteren(counter_addr)) &&
-      (reg_mstatus.prv >= PRV.S || reg_scounteren(counter_addr))
+      (!usingVM || reg_mstatus.prv >= PRV.S || reg_scounteren(counter_addr))
     io_dec.fp_illegal := io.status.fs === 0 || !reg_misa('f'-'a')
     io_dec.fp_csr := Bool(usingFPU) && DecodeLogic(io_dec.csr, fp_csrs.keys.toList.map(_.U), (read_mapping -- fp_csrs.keys.toList).keys.toList.map(_.U))
     io_dec.rocc_illegal := io.status.xs === 0 || !reg_misa('x'-'a')
@@ -531,7 +522,10 @@ class CSRFile(
   val debugTVec = Mux(reg_debug, Mux(insn_break, UInt(0x800), UInt(0x808)), UInt(0x800))
   val delegate = Bool(usingVM) && reg_mstatus.prv <= PRV.S && Mux(cause(xLen-1), reg_mideleg(cause_lsbs), reg_medeleg(cause_lsbs))
   val mtvecBaseAlign = 2
-  val mtvecInterruptAlign = log2Ceil(new MIP().getWidth)
+  val mtvecInterruptAlign = {
+    require(reg_mip.getWidth <= xLen)
+    log2Ceil(xLen)
+  }
   val notDebugTVec = {
     val base = Mux(delegate, reg_stvec.sextTo(vaddrBitsExtended), reg_mtvec)
     val interruptOffset = cause(mtvecInterruptAlign-1, 0) << mtvecBaseAlign
@@ -760,7 +754,7 @@ class CSRFile(
         if (usingRoCC) reg_mstatus.xs := Fill(2, new_sstatus.xs.orR)
       }
       when (decoded_addr(CSRs.sip)) {
-        val new_sip = new MIP().fromBits(wdata)
+        val new_sip = new MIP().fromBits((read_mip & ~reg_mideleg) | (wdata & reg_mideleg))
         reg_mip.ssip := new_sip.ssip
       }
       when (decoded_addr(CSRs.sptbr)) {
