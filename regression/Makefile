@@ -131,7 +131,7 @@ stamps/other-submodules.stamp:
 	git -C $(abspath $(TOP)) submodule update --init --recursive $(submodule_names)
 	date > $@
 
-$(RISCV)/install.stamp: stamps/riscv-tests.stamp
+$(RISCV)/install.stamp:
 	mkdir -p $(dir $@)
 	+cd $(abspath $(TOP))/riscv-tools; RISCV=$(abspath $(RISCV)) ./build.sh
 	date > $@
