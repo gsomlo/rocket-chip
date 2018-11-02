@@ -132,6 +132,10 @@ stamps/other-submodules.stamp:
 	date > $@
 
 $(RISCV)/install.stamp:
+	git -C $(abspath $(TOP)) clone -n https://github.com/riscv/riscv-tools.git
+	git -C $(abspath $(TOP))/riscv-tools checkout $(TOOLS_HASH)
+	git -C $(abspath $(TOP))/riscv-tools submodule update --init --recursive
+	rm -f $(abspath $(TOP))/riscv-tools/.travis.yml
 	mkdir -p $(dir $@)
 	+cd $(abspath $(TOP))/riscv-tools; RISCV=$(abspath $(RISCV)) ./build.sh
 	date > $@
@@ -239,12 +243,8 @@ endif
 
 JTAG_DTM_SIM_ARGS = +verbose +jtag_rbb_enable=1 $(SEED_ARG)
 
-stamps/riscv-tests.stamp:
+stamps/riscv-tests.stamp: $(RISCV)/install.stamp
 	mkdir -p $(dir $@)
-	git -C $(abspath $(TOP)) clone -n https://github.com/riscv/riscv-tools.git
-	git -C $(abspath $(TOP))/riscv-tools checkout $(TOOLS_HASH)
-	git -C $(abspath $(TOP))/riscv-tools submodule update --init --recursive
-	rm -f $(abspath $(TOP))/riscv-tools/.travis.yml
 	date > $@
 
 stamps/%/vsim-jtag-dtm-32-$(JTAG_DTM_TEST).stamp: stamps/%/vsim$(JTAG_STAMP_SUFFIX).stamp stamps/riscv-tests.stamp
