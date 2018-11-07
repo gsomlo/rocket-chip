@@ -17,6 +17,9 @@ TORTURE_CONFIG ?= default
 # The top-level directory that contains rocket-chip
 TOP ?= ..
 
+# The directory that tools get checked out into
+RISCV_TOOLS = $(abspath $(TOP))/riscv-tools
+
 # The hash of the tools that we're using
 TOOLS_HASH ?= $(shell cat $(TOP)/riscv-tools.hash)
 $(info Using riscv-tools of $(TOOLS_HASH))
@@ -131,13 +134,23 @@ stamps/other-submodules.stamp:
 	git -C $(abspath $(TOP)) submodule update --init --recursive $(submodule_names)
 	date > $@
 
-$(RISCV)/install.stamp:
-	git -C $(abspath $(TOP)) clone -n https://github.com/riscv/riscv-tools.git
-	git -C $(abspath $(TOP))/riscv-tools checkout $(TOOLS_HASH)
-	git -C $(abspath $(TOP))/riscv-tools submodule update --init --recursive
-	rm -f $(abspath $(TOP))/riscv-tools/.travis.yml
+stamps/riscv-tools_checkout.stamp:
 	mkdir -p $(dir $@)
-	+cd $(abspath $(TOP))/riscv-tools; RISCV=$(abspath $(RISCV)) ./build.sh
+	git -C $(abspath $(TOP)) clone -n https://github.com/riscv/riscv-tools.git
+	git -C $(RISCV_TOOLS) checkout $(TOOLS_HASH)
+	git -C $(RISCV_TOOLS) submodule update --init --recursive
+	rm -f $(RISCV_TOOLS)/.travis.yml
+	mkdir -p $(dir $@)
+	date > $@
+	# If there is a cached version of this build then touch its install.stamp
+	# file to prevent a rebuild. However there may not be a cached version of
+	# the build, so the touch command should not cause a failure if returns
+	# non-zero
+	touch -c $(RISCV)/install.stamp
+
+$(RISCV)/install.stamp: stamps/riscv-tools_checkout.stamp
+	mkdir -p $(dir $@)
+	+cd $(RISCV_TOOLS); RISCV=$(abspath $(RISCV)) ./build.sh
 	date > $@
 
 # Builds the various simulators
@@ -243,7 +256,7 @@ endif
 
 JTAG_DTM_SIM_ARGS = +verbose +jtag_rbb_enable=1 $(SEED_ARG)
 
-stamps/riscv-tests.stamp: $(RISCV)/install.stamp
+stamps/riscv-tests.stamp: stamps/riscv-tools_checkout.stamp
 	mkdir -p $(dir $@)
 	date > $@
 
