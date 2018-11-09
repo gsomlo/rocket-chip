@@ -27,13 +27,6 @@ $(info Using riscv-tools of $(TOOLS_HASH))
 # The directory that the tools get built into.
 RISCV ?= install/$(TOOLS_HASH)
 
-# If there is a cached version of this build then touch its install.stamp
-# file to prevent a rebuild. However there may not be a cached version of
-# the build, so the touch command should not cause a failure if returns
-# non-zero
-$(shell touch -c $(RISCV)/install.stamp)
-
-
 # Torture saves the failing tests into a directory, which defaults to just somehing inside the regressions directory.
 TORTURE_SAVE_DIR ?= torture-failures
 
@@ -150,7 +143,13 @@ stamps/riscv-tools_checkout.stamp:
 	mkdir -p $(dir $@)
 	date > $@
 
-$(RISCV)/install.stamp: stamps/riscv-tools_checkout.stamp
+# riscv-tools_checkout.stamp is an order-only prerequisite:
+# https://www.gnu.org/software/make/manual/make.html#Prerequisite-Types
+# This means that the rule will be executed, but it will /not/ be
+# evaluated as a depenency for install.stamp. This is needed because
+# the timestamp on install.stamp will be older than the checkout stamp
+# anytime we restore the installation area from cache in travisci.
+$(RISCV)/install.stamp: | stamps/riscv-tools_checkout.stamp
 	mkdir -p $(dir $@)
 	+cd $(RISCV_TOOLS); RISCV=$(abspath $(RISCV)) ./build.sh
 	date > $@
