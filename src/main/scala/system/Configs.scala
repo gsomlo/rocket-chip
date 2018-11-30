@@ -22,6 +22,18 @@ class BaseConfig extends Config(
   new BaseSubsystemConfig()
 )
 
+class LowRiscConfig extends Config(
+  new WithJtagDTMSystem ++
+  new WithLowRiscNBigCores(1) ++
+  new WithLowRiscMemPort() ++
+  new WithLowRiscMMIOPort() ++
+  new WithDefaultSlavePort() ++
+  new WithTimebase(BigInt(1000000)) ++ // 1 MHz
+  new WithDTS("freechips,rocketchip-unknown", Nil) ++
+  new WithNExtTopInterrupts(4) ++
+  new BaseSubsystemConfig()
+)
+
 class DefaultConfig extends Config(new WithNBigCores(1) ++ new BaseConfig)
 
 class DefaultBufferlessConfig extends Config(new WithBufferlessBroadcastHub ++ new DefaultConfig)

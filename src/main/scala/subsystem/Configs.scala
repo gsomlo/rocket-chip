@@ -87,6 +87,30 @@ class WithNMedCores(n: Int) extends Config((site, here, up) => {
   }
 })
 
+class WithLowRiscNBigCores(n: Int) extends Config((site, here, up) => {
+  case RocketTilesKey => {
+    val big = RocketTileParams(
+      core   = RocketCoreParams(mulDiv = Some(MulDivParams(
+        mulUnroll = 8,
+        mulEarlyOut = true,
+        divEarlyOut = true))),
+      dcache = Some(DCacheParams(
+        rowBits = site(SystemBusKey).beatBits,
+        nSets = 64, // default
+        nWays = 16, // dflt. 4
+        nTLBEntries = 64, // dflt. 32
+        nMSHRs = 4, // was 0 (dflt. 1)
+        blockBytes = site(CacheBlockBytes))),
+      icache = Some(ICacheParams(
+        rowBits = site(SystemBusKey).beatBits,
+        nSets = 64, // default
+        nWays = 16, // dflt. 4
+        nTLBEntries = 64, // dflt. 32
+        blockBytes = site(CacheBlockBytes))))
+    List.tabulate(n)(i => big.copy(hartId = i))
+  }
+})
+
 class WithNSmallCores(n: Int) extends Config((site, here, up) => {
   case RocketTilesKey => {
     val small = RocketTileParams(
@@ -349,6 +373,14 @@ class WithDefaultMemPort extends Config((site, here, up) => {
                       idBits = 4), 1))
 })
 
+class WithLowRiscMemPort extends Config((site, here, up) => {
+  case ExtMem => Some(MemoryPortParams(MasterPortParams(
+                      base = x"8000_0000",
+                      size = x"4000_0000",
+                      beatBytes = site(MemoryBusKey).beatBytes,
+                      idBits = 4), 1))
+})
+
 class WithNoMemPort extends Config((site, here, up) => {
   case ExtMem => None
 })
@@ -357,6 +389,14 @@ class WithDefaultMMIOPort extends Config((site, here, up) => {
   case ExtBus => Some(MasterPortParams(
                       base = x"6000_0000",
                       size = x"2000_0000",
+                      beatBytes = site(MemoryBusKey).beatBytes,
+                      idBits = 4))
+})
+
+class WithLowRiscMMIOPort extends Config((site, here, up) => {
+  case ExtBus => Some(MasterPortParams(
+                      base = x"4000_0000",
+                      size = x"0010_0000",
                       beatBytes = site(MemoryBusKey).beatBytes,
                       idBits = 4))
 })
