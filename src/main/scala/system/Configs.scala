@@ -24,6 +24,7 @@ class BaseConfig extends Config(
 
 class LowRiscConfig extends Config(
   new WithJtagDTMSystem ++
+  new WithXilinx7Jtag ++
   new WithLowRiscNBigCores(1) ++
   new WithLowRiscMemPort() ++
   new WithLowRiscMMIOPort() ++

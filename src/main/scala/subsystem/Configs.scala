@@ -331,6 +331,9 @@ class WithDebugAPB extends Config ((site, here, up) => {
   case ExportDebug => up(ExportDebug, site).copy(protocols = Set(APB))
 })
 
+class WithXilinx7Jtag extends Config ((site, here, up) => {
+  case JtagDTMAddrKey => new JtagDTMAddrKeyXilinx7()
+})
 
 class WithDebugSBA extends Config ((site, here, up) => {
   case DebugModuleKey => up(DebugModuleKey, site).map(_.copy(hasBusMaster = true))

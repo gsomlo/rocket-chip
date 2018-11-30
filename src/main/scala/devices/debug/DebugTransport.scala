@@ -45,6 +45,13 @@ class JtagDTMAddrKeyDefault extends JtagDTMAddrConfig(
   dtmInfo   = 0x10,
   idCode    = 0x01)
 
+class JtagDTMAddrKeyXilinx7 extends JtagDTMAddrConfig(
+  confId    = "Xilinx7",
+  irLength  =    6,
+  dmiAccess = 0x23,
+  dtmInfo   = 0x22,
+  idCode    = 0x09)
+
 class DMIAccessUpdate(addrBits: Int) extends Bundle {
   val addr = UInt(addrBits.W)
   val data = UInt(DMIConsts.dmiDataSize.W)
