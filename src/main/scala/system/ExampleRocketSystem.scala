@@ -9,6 +9,7 @@ import freechips.rocketchip.subsystem._
 import freechips.rocketchip.prci.SimpleClockGroupSource
 import freechips.rocketchip.devices.tilelink._
 import freechips.rocketchip.util.DontTouch
+import freechips.rocketchip.devices.debug.{HasPeripheryDebug, HasPeripheryDebugModuleImp}
 
 /** Example Top with periphery devices and ports, and a Rocket subsystem */
 class ExampleRocketSystem(implicit p: Parameters) extends RocketSubsystem
@@ -17,6 +18,7 @@ class ExampleRocketSystem(implicit p: Parameters) extends RocketSubsystem
     with CanHaveMasterAXI4MemPort
     with CanHaveMasterAXI4MMIOPort
     with CanHaveSlaveAXI4Port
+    with HasPeripheryDebug
     with HasPeripheryBootROM {
   override lazy val module = new ExampleRocketSystemModuleImp(this)
 }
@@ -25,4 +27,5 @@ class ExampleRocketSystemModuleImp[+L <: ExampleRocketSystem](_outer: L) extends
     with HasRTCModuleImp
     with HasExtInterruptsModuleImp
     with HasPeripheryBootROMModuleImp
+    with HasPeripheryDebugModuleImp
     with DontTouch

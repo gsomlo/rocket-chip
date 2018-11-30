@@ -19,6 +19,7 @@ class TestHarness()(implicit p: Parameters) extends Module {
   // Allow the debug ndreset to reset the dut, but not until the initial reset has completed
   dut.reset := reset | dut.debug.map { debug => AsyncResetReg(debug.ndreset) }.getOrElse(false.B)
 
+  dut.io.reset_vector := UInt(1) << 31
   dut.dontTouchPorts()
   dut.tieOffInterrupts()
   SimAXIMem.connectMem(ldut)

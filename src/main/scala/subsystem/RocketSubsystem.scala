@@ -80,8 +80,12 @@ class RocketSubsystem(implicit p: Parameters) extends BaseSubsystem
 class RocketSubsystemModuleImp[+L <: RocketSubsystem](_outer: L) extends BaseSubsystemModuleImp(_outer)
     with HasResetVectorWire
     with HasRocketTilesModuleImp {
+  val io = IO(new Bundle {
+    val reset_vector = UInt(INPUT, width = resetVectorBits)
+  })
+
   tile_inputs.zip(outer.hartIdList).foreach { case(wire, i) =>
     wire.hartid := UInt(i)
-    wire.reset_vector := global_reset_vector
+    wire.reset_vector := io.reset_vector
   }
 }
