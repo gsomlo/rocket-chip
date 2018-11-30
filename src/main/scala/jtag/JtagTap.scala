@@ -7,6 +7,7 @@ import scala.collection.SortedMap
 import chisel3._
 import chisel3.util._
 import freechips.rocketchip.config.Parameters
+import freechips.rocketchip.devices.debug.JtagDTMAddrKey
 
 /** JTAG signals, viewed from the master side
   */
@@ -198,7 +199,9 @@ object JtagTapGenerator {
 
     require(!(allInstructions contains bypassIcode), "instructions may not contain BYPASS code")
 
-    val controllerInternal = Module(new JtagTapController(irLength, initialInstruction))
+    val controllerInternal = Module(p(JtagDTMAddrKey).confId match {
+      case _        => new JtagTapController(irLength, initialInstruction)
+    })
 
     val unusedChainOut = Wire(new ShifterIO)  // De-selected chain output
     unusedChainOut.shift := false.B

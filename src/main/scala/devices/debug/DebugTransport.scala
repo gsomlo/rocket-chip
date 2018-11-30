@@ -29,11 +29,21 @@ class JtagDTMKeyDefault extends JtagDTMConfig(
   idcodeManufId = 0,
   debugIdleCycles = 5) // Reasonable guess for synchronization.
 
-object dtmJTAGAddrs {
-  def IDCODE       = 0x1
-  def DTM_INFO     = 0x10
-  def DMI_ACCESS = 0x11
-}
+case class JtagDTMAddrConfig (
+  confId    : String,
+  irLength  : Int,    // length of instruction register, in bits
+  dmiAccess : BigInt, // instruction code for DMI Access Chain
+  dtmInfo   : BigInt, // instr. code for DTM Info Chain
+  idCode    : BigInt) // idcode instruction
+
+case object JtagDTMAddrKey extends Field[JtagDTMAddrConfig](new JtagDTMAddrKeyDefault())
+
+class JtagDTMAddrKeyDefault extends JtagDTMAddrConfig(
+  confId    = "default",
+  irLength  =    5,
+  dmiAccess = 0x11,
+  dtmInfo   = 0x10,
+  idCode    = 0x01)
 
 class DMIAccessUpdate(addrBits: Int) extends Bundle {
   val addr = UInt(addrBits.W)
@@ -247,11 +257,13 @@ class DebugTransportModuleJTAG(debugAddrBits: Int, c: JtagDTMConfig)
   idcode.partNumber := io.jtag_part_number
   idcode.mfrId      := io.jtag_mfr_id
 
-  val tapIO = JtagTapGenerator(irLength = 5,
+  val jAddr = p(JtagDTMAddrKey)
+
+  val tapIO = JtagTapGenerator(irLength = jAddr.irLength,
     instructions = Map(
-      dtmJTAGAddrs.DMI_ACCESS -> dmiAccessChain,
-      dtmJTAGAddrs.DTM_INFO   -> dtmInfoChain),
-    icode = Some(dtmJTAGAddrs.IDCODE)
+      jAddr.dmiAccess -> dmiAccessChain,
+      jAddr.dtmInfo   -> dtmInfoChain),
+    icode = Some(jAddr.idCode)
   )
 
   tapIO.idcode.get := idcode
