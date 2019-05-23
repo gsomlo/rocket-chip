@@ -84,3 +84,27 @@ class MMIOPortOnlyConfig extends Config(
 
 class BaseFPGAConfig extends Config(new BaseConfig)
 class DefaultFPGAConfig extends Config(new WithNSmallCores(1) ++ new BaseFPGAConfig)
+
+class BaseLitexConfig extends Config(
+  new WithLitexMemPort() ++
+  new WithLitexMMIOPort() ++
+  new WithNoSlavePort ++
+  new WithNExtTopInterrupts(4) ++
+  new WithCoherentBusTopology ++
+  new BaseConfig
+)
+
+class LitexConfig extends Config(
+  new WithNSmallCores(1) ++
+  new BaseLitexConfig
+)
+
+class LitexLinuxConfig extends Config(
+  new WithNMedCores(1) ++
+  new BaseLitexConfig
+)
+
+class LitexFullConfig extends Config(
+  new WithNBigCores(1) ++
+  new BaseLitexConfig
+)
