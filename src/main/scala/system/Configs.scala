@@ -96,15 +96,30 @@ class BaseLitexConfig extends Config(
 
 class LitexConfig extends Config(
   new WithNSmallCores(1) ++
+  new WithEdgeDataBits(64) ++
   new BaseLitexConfig
 )
 
 class LitexLinuxConfig extends Config(
   new WithNMedCores(1) ++
+  new WithEdgeDataBits(64) ++
+  new BaseLitexConfig
+)
+
+class LitexLinuxDConfig extends Config(
+  new WithNMedCores(1) ++
+  new WithEdgeDataBits(128) ++
+  new BaseLitexConfig
+)
+
+class LitexLinuxQConfig extends Config(
+  new WithNMedCores(1) ++
+  new WithEdgeDataBits(256) ++
   new BaseLitexConfig
 )
 
 class LitexFullConfig extends Config(
   new WithNBigCores(1) ++
+  new WithEdgeDataBits(64) ++
   new BaseLitexConfig
 )
