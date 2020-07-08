@@ -350,6 +350,10 @@ class WithEdgeDataBits(dataBits: Int) extends Config((site, here, up) => {
   
 })
 
+class WithMemoryDataBits(dataBits: Int) extends Config((site, here, up) => {
+  case MemoryBusKey => up(MemoryBusKey, site).copy(beatBytes = dataBits/8)
+})
+
 class WithJtagDTM extends Config ((site, here, up) => {
   case ExportDebug => up(ExportDebug, site).copy(protocols = Set(JTAG))
 })
@@ -434,6 +438,13 @@ class WithNoMMIOPort extends Config((site, here, up) => {
 
 class WithDefaultSlavePort extends Config((site, here, up) => {
   case ExtIn  => Some(SlavePortParams(beatBytes = 8, idBits = 8, sourceBits = 4))
+})
+
+class WithLitexSlavePort extends Config((site, here, up) => {
+  case ExtIn  => Some(SlavePortParams(
+                      beatBytes = site(SystemBusKey).beatBytes,
+                      idBits = 8,
+                      sourceBits = 4))
 })
 
 class WithNoSlavePort extends Config((site, here, up) => {
